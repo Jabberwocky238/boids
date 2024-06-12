@@ -1,9 +1,9 @@
 import { Application, Assets} from 'pixi.js';
-import { BirdEntity } from './birdEntity.ts';
+import { Bird } from './bird.ts';
 import { BIRDS_CNT, HEIGHT, WIDTH } from './config.ts';
 
 
-const BIRD_LIST: BirdEntity[] = [];
+const BIRD_LIST: Bird[] = [];
 export function useBIRD_LIST() {
     return BIRD_LIST
 }
@@ -16,7 +16,7 @@ async function init(app: Application) {
         const randomY = Math.random() * HEIGHT
         const randomRX = Math.random() - 0.5
         const randomRY = Math.random() - 0.5
-        const bird = new BirdEntity(index, randomX, randomY, randomRX, randomRY)
+        const bird = new Bird(index, randomX, randomY, randomRX, randomRY)
         BIRD_LIST.push(bird)
     }
     BIRD_LIST.forEach(bird => {

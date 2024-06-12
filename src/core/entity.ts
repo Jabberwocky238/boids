@@ -1,77 +1,83 @@
-import { Graphics, Container } from 'pixi.js';
-import { HEIGHT, WIDTH, OUT_OF_RANGE_DIST, MOMENT} from './config.ts';
-
-function calcRotate(mx: number, my: number) {
-    let angle = Math.atan(mx / my)
-    if (my < 0) angle += Math.PI
-    return angle
-}
-
-class Movement {
-    container: Container;
-    moment_x: number;
-    moment_x_add: number = 0;
-    moment_y: number;
-    moment_y_add: number = 0;
-
-    constructor(
-        container: Container,
-        moment_x: number = 0,
-        moment_y: number = 1,
-    ) {
-        this.container = container
-        this.moment_x = moment_x;
-        this.moment_y = moment_y;
-        this.toward()
-    }
-
-    toward() {       
-        // this.moment_x_add = this.moment_x_add / Math.sqrt(Math.pow(this.moment_x_add, 2) + Math.pow(this.moment_y_add, 2))
-        // this.moment_y_add = this.moment_y_add / Math.sqrt(Math.pow(this.moment_x_add, 2) + Math.pow(this.moment_y_add, 2))
-        
-        // this.moment_x = this.moment_x * MOMENT + this.moment_x_add * (1 - MOMENT)
-        // this.moment_y = this.moment_y * MOMENT + this.moment_y_add * (1 - MOMENT)
-
-        this.moment_x = this.moment_x / Math.sqrt(Math.pow(this.moment_x, 2) + Math.pow(this.moment_y, 2))
-        this.moment_y = this.moment_y / Math.sqrt(Math.pow(this.moment_x, 2) + Math.pow(this.moment_y, 2))
-
-        this.container.rotation = calcRotate(this.moment_x, this.moment_y);
-    }
-
-    public get localCenter() {
-        const mountBirdBounds = this.container.getLocalBounds()
-        return {
-            x: mountBirdBounds.x + mountBirdBounds.width / 2,
-            y: mountBirdBounds.y + mountBirdBounds.height / 2,
-        }
-    }
-
-    move(speed = 0.1) {
-        this.toward()
-        this.container.x += speed * this.moment_x
-        this.container.y += speed * -this.moment_y
-
-        //出界检查
-        if (this.container.x > WIDTH + OUT_OF_RANGE_DIST) this.container.x = -OUT_OF_RANGE_DIST;
-        if (this.container.x < -OUT_OF_RANGE_DIST) this.container.x = WIDTH + OUT_OF_RANGE_DIST;
-        if (this.container.y > HEIGHT + OUT_OF_RANGE_DIST) this.container.y = -OUT_OF_RANGE_DIST;
-        if (this.container.y < -OUT_OF_RANGE_DIST) this.container.y = HEIGHT + OUT_OF_RANGE_DIST;
-    }
-
-}
+import { Sprite, Graphics, Container } from 'pixi.js';
+import { PERCEPT_RANGE, SCALE_RATE, DEBUG_SERIAL } from './config.ts';
+import { Movement } from './movement.ts';
+import { useBIRD_LIST } from './main.ts';
+import { euclideanDistance } from './utils.ts';
 
 export class Entity {
     serial_number: number;
 
     container: Container
     movement: Movement;
-    permenant_graphic: Graphics;
 
-    constructor(seq: number, x: number, y: number, mx: number, my: number) {
-        console.info(`[Entity ${seq}] ${x} - ${y}`)
+    permenant_graphic: Graphics;
+    sprite: Sprite;
+
+    constructor(
+        seq: number,
+        pos_x: number = 100,
+        pos_y: number = 100,
+        moment_x: number = 1,
+        moment_y: number = -1,
+    ) {
+        console.info(`[bird ${seq}] ${pos_x} - ${pos_y}`)
         this.serial_number = seq;
-        this.container = new Container({ zIndex: 1, x: x, y: y });
-        this.movement = new Movement(this.container, mx, my);
+        this.container = new Container({ zIndex: 1, x: pos_x, y: pos_y });
+        this.movement = new Movement(this.container, moment_x, moment_y);
+        
+        this.sprite = Sprite.from('sample.png');
+        this.sprite.zIndex = 5;
+        this.sprite.anchor.set(0.5, 0.5);
+        this.sprite.scale.set(SCALE_RATE);
+        this.container.addChild(this.sprite);
+
+        const mountBirdBounds = this.sprite.getBounds();
+        const _w = mountBirdBounds.width * 0.5
+        const _x = this.movement.localCenter.x - _w / 2
+        const _h = mountBirdBounds.height * 0.5
+        const _y = this.movement.localCenter.y - _h / 2
+        // console.log(_x, _y, _w, _h, mountBirdBounds)
         this.permenant_graphic = new Graphics({ zIndex: 3, parent: this.container });
+        this.permenant_graphic.rect(_x, _y, _w, _h)
+        this.permenant_graphic.stroke({ color: 0x00ff00, width: 2 }); // 设置线条样式
+
+        DEBUG_SERIAL.forEach(debug_item => {
+            if (this.serial_number === debug_item.serial_number) {
+                this.permenant_graphic.circle(this.movement.localCenter.x, this.movement.localCenter.y, PERCEPT_RANGE);
+                this.permenant_graphic.fill({ color: debug_item.color, alpha: 0.5 });
+
+                const temporary_graphic = new Graphics({ zIndex: 10, parent: this.container });
+                temporary_graphic.label = 'temporary_graphic'
+                this.container.addChild(temporary_graphic);
+            }
+        })
+    }
+
+    rangeCheck(birdInRange: Entity[]) {
+        DEBUG_SERIAL.forEach(debug_item => {
+            if (this.serial_number === debug_item.serial_number) {
+                const temporary_graphic: Graphics = this.container.getChildByLabel('temporary_graphic') as Graphics;
+                temporary_graphic.clear()
+                birdInRange.forEach(bird => {
+                    const temporary_graphic: Graphics = this.container.getChildByLabel('temporary_graphic') as Graphics;
+                    var thisPosition = this.container.toLocal(this.container.position);
+                    var birdPosition = this.container.toLocal(bird.container.position);
+                    temporary_graphic.moveTo(thisPosition.x, thisPosition.y)
+                    temporary_graphic.lineTo(birdPosition.x, birdPosition.y)
+                    temporary_graphic.stroke({ color: debug_item.color, width: 2 }); // 设置线条样式
+                })
+            }
+        })
+    }
+    
+    move() {
+        const BIRD_LIST = useBIRD_LIST()
+        var birdInRange = BIRD_LIST.filter(bird => {
+            const judge1 = bird !== this;
+            const judge2 = euclideanDistance(this.container.x, this.container.y, bird.container.x, bird.container.y)
+            return judge1 && judge2 < PERCEPT_RANGE;
+        })
+        this.rangeCheck(birdInRange);
+        this.movement.move();
     }
 }
