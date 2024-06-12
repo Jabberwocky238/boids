@@ -1,34 +1,16 @@
-steerAlignment(birdInRange: BirdEntity[]) {
-    birdInRange.forEach(bird => {
-        this.movement.moment_x_add += bird.movement.moment_x / PERCEPT_RANGE;
-        this.movement.moment_y_add += bird.movement.moment_y / PERCEPT_RANGE;
+import { ALIGNMENT_RATE } from "../config";
+import { Entity } from "../entity";
+import { L2 } from "../utils";
+
+function steerAlignment(thisEntity: Entity, entityInRange: Entity[]) {
+    entityInRange.forEach(entity => {
+        const forceX = entity.container.x - thisEntity.container.x;
+        const forceY = entity.container.y - thisEntity.container.y;
+        const distance = L2(forceX, forceY)
+        thisEntity.movement.moment_x_add += entity.movement.moment_x * forceX / distance * ALIGNMENT_RATE
+        thisEntity.movement.moment_y_add += entity.movement.moment_y * forceY / distance * ALIGNMENT_RATE
     })
 }
 
-steerCohesion(birdInRange: BirdEntity[]) {
-    let center_x = this.container.x;
-    let center_y = this.container.y;
-    let cnt = 1
 
-    birdInRange.forEach(bird => {
-        center_x += bird.container.x
-        center_y += bird.container.y
-        cnt += 1            
-    })
-
-    if (cnt === 1) return;
-
-    const globalCenter = new Point(center_x / cnt, center_y / cnt)
-    const localCenter = this.container.toLocal(globalCenter)
-
-    this.movement.moment_x_add += localCenter.x / PERCEPT_RANGE * COHESION_RATE ;
-    this.movement.moment_y_add += localCenter.y / PERCEPT_RANGE * COHESION_RATE ;
-
-    DEBUG_SERIAL.forEach(debug_item => {
-        if (this.serial_number === debug_item.serial_number) {
-            const temporary_graphic: Graphics = this.container.getChildByLabel('temporary_graphic') as Graphics;
-            temporary_graphic.circle(localCenter.x, localCenter.y, 20);
-            temporary_graphic.fill({ color: debug_item.color, alpha: 0.5 });
-        }
-    })
-}
+export default steerAlignment;

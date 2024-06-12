@@ -1,7 +1,9 @@
 import { PERCEPT_RANGE, SCALE_RATE, DEBUG_SERIAL } from './config.ts';
 import { useBIRD_LIST } from './main.ts';
 import { Entity } from './entity.ts';
+
 import steerSeparation from './strategies/seperation.ts'
+import steerAlignment from './strategies/alignment.ts';
 
 function euclideanDistance(x1: number, y1: number, x2: number, y2: number) {
     return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
@@ -27,6 +29,7 @@ export class Bird extends Entity {
             return judge1 && judge2 < PERCEPT_RANGE;
         })
         steerSeparation(this, birdInRange)
+        steerAlignment(this, birdInRange)
         this.rangeCheck(birdInRange);
         this.movement.move();
     }

@@ -8,12 +8,12 @@ export const SCALE_RATE = 0.05;
 export const MOMENT = 0.9;
 
 // bird
-export const BIRDS_CNT = 100;
+export const BIRDS_CNT = 60;
 export const PERCEPT_RANGE = 100;
 
-export const COHESION_RATE = 0.3;
-
-
+export const SEPERATE_RATE = 1;
+export const ALIGNMENT_RATE = 1;
+export const COHESION_RATE = 1;
 
 // debug
 export const DEBUG_SERIAL = [

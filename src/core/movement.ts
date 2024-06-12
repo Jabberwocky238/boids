@@ -1,15 +1,11 @@
 import { Container } from 'pixi.js';
 import { HEIGHT, WIDTH, OUT_OF_RANGE_DIST, MOMENT, SPEED } from './config.ts';
+import { L2 } from './utils.ts';
 
 function calcRotate(mx: number, my: number) {
     let angle = Math.atan(mx / my)
     if (my < 0) angle += Math.PI
     return angle
-}
-
-function L2(x: number, y: number) {
-    const res = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) 
-    return res === 0 ? 1 : res
 }
 
 export class Movement {

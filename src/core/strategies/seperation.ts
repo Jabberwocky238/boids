@@ -1,14 +1,7 @@
-import { PERCEPT_RANGE } from "../config";
+import { SEPERATE_RATE } from "../config";
 import { Entity } from "../entity";
+import { L2 } from "../utils";
 
-function euclideanDistance(x1: number, y1: number, x2: number, y2: number) {
-    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-}
-
-function L2(x: number, y: number) {
-    const res = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) 
-    return res === 0 ? 1 : res
-}
 
 function steerSeparation(thisEntity: Entity, entityInRange: Entity[]) {
     entityInRange.forEach(entity => {
@@ -17,8 +10,8 @@ function steerSeparation(thisEntity: Entity, entityInRange: Entity[]) {
         const distance = L2(forceX, forceY)
         // const steer = (forceX + forceY) / distance;
         // console.log(forceX  / distance, forceY  / distance)
-        thisEntity.movement.moment_x_add -= forceX / distance 
-        thisEntity.movement.moment_y_add += forceY / distance 
+        thisEntity.movement.moment_x_add += forceX / distance * SEPERATE_RATE
+        thisEntity.movement.moment_y_add += forceY / distance * SEPERATE_RATE
     })
 }
 
