@@ -3,11 +3,23 @@ import { HEIGHT, WIDTH, OUT_OF_RANGE_DIST, MOMENT, SPEED } from './config.ts';
 import { L2 } from './utils.ts';
 
 function calcRotate(mx: number, my: number) {
+    if (my === 0) return 0
     let angle = Math.atan(mx / my)
     if (my < 0) angle += Math.PI
     return angle
 }
-
+function radius(x: number) {
+    return x / Math.PI * 180;
+}
+function anti_radius(x: number) {
+    return x / 180 * Math.PI;
+}
+/**
+ * Movement
+ * x: - y: - | x: + y: - 
+ * ----------|-----------
+ * x: - y: + | x: + y: + 
+ */
 export class Movement {
     container: Container;
     moment_x: number;
@@ -17,32 +29,32 @@ export class Movement {
 
     constructor(
         container: Container,
-        moment_x: number = 0,
-        moment_y: number = 1,
+        to: number,
     ) {
         this.container = container
-        this.moment_x = moment_x;
-        this.moment_y = moment_y;
+        this.container.rotation = anti_radius(to)
+        this.moment_x = Math.sin(this.container.rotation)
+        this.moment_y = Math.cos(this.container.rotation)
         this.toward()
     }
 
     toward() {       
         this.moment_x_add = this.moment_x_add / L2(this.moment_x_add, this.moment_y_add)
         this.moment_y_add = this.moment_y_add / L2(this.moment_x_add, this.moment_y_add)
-        // console.log(this.moment_x_add, this.moment_y_add)
+        const new_direction = calcRotate(this.moment_x_add, this.moment_y_add);
+        this.container.rotation += (1 - MOMENT) * new_direction
+        // // console.log(this.moment_x_add, this.moment_y_add)
         
-        this.moment_x = this.moment_x * MOMENT + this.moment_x_add * (1 - MOMENT)
-        this.moment_y = this.moment_y * MOMENT + this.moment_y_add * (1 - MOMENT)
-        // console.log(this.moment_x, this.moment_y)
+        this.moment_x = Math.sin(this.container.rotation)
+        this.moment_y = Math.cos(this.container.rotation)
+        // // console.log(this.moment_x, this.moment_y)
         
-        this.moment_x = this.moment_x / L2(this.moment_x, this.moment_y)
-        this.moment_y = this.moment_y / L2(this.moment_x, this.moment_y)
-        // console.log(this.moment_x, this.moment_y)
+        // this.moment_x = this.moment_x / L2(this.moment_x, this.moment_y)
+        // this.moment_y = this.moment_y / L2(this.moment_x, this.moment_y)
+        // // console.log(this.moment_x, this.moment_y)
 
         this.moment_x_add = 0
         this.moment_y_add = 0
-
-        this.container.rotation = calcRotate(this.moment_x, this.moment_y);
     }
 
     public get localCenter() {

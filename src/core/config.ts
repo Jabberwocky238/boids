@@ -3,13 +3,13 @@ export const HEIGHT = window.innerHeight - 100;
 
 // entity
 export const OUT_OF_RANGE_DIST = 10;
-export const SPEED = 1;
-export const SCALE_RATE = 0.05;
-export const MOMENT = 0.9;
+export const SPEED = 10;
+export const SCALE_RATE = 0.1;
+export const MOMENT = 0.95;
 
 // bird
-export const BIRDS_CNT = 60;
-export const PERCEPT_RANGE = 100;
+export const BIRDS_CNT = 30;
+export const PERCEPT_RANGE = 150;
 
 export const SEPERATE_RATE = 1;
 export const ALIGNMENT_RATE = 1;
